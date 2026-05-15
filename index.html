@@ -286,9 +286,15 @@ function gvSubmit(e) {
   btn.disabled = true;
   btn.textContent = 'Отправка...';
 
+  var p = phone.replace(/\s/g, '');
+  if (/^\+373/.test(p))      p = '0' + p.slice(4);
+  else if (/^373/.test(p))   p = '0' + p.slice(3);
+  else if (/^[67]/.test(p))  p = '0' + p;
+  var phoneNorm = p.slice(0, 3) + '-' + p.slice(3);
+
   var payload = {
     name:    name,
-    phone:   phone,
+    phone:   phoneNorm,
     studio:  studio,
     message: message,
     source:  'guest-visit-modal',
