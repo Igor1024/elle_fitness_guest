@@ -185,6 +185,9 @@ var modifier_text_summary = true;
         <div class="gv-error" id="gv-err-studio">Пожалуйста, выберите студию</div>
       </div>
       <textarea id="gv-message" name="message" placeholder="Ваше сообщение" maxlength="5000" class="tastes text-area w-input" style="min-height:90px;"></textarea>
+      <div style="position:absolute;left:-9999px;opacity:0;pointer-events:none;" aria-hidden="true">
+        <input type="text" id="gv-hp" name="website" tabindex="-1" autocomplete="off">
+      </div>
       <div class="gv-check-wrap">
         <input type="checkbox" id="gv-policy">
         <label class="gv-check-label" for="gv-policy">Я ознакомлен с <a href="#">Политикой обработки персональных данных</a></label>
@@ -250,6 +253,7 @@ function gvShowError(fieldId, errId) {
 
 function gvSubmit(e) {
   e.preventDefault();
+  if (document.getElementById('gv-hp').value) return;
   gvClearErrors();
 
   var name    = document.getElementById('gv-name').value.trim();
