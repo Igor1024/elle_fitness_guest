@@ -168,11 +168,11 @@ var modifier_text_summary = true;
     <form id="gv-form" onsubmit="gvSubmit(event)" novalidate>
       <div>
         <input class="tastes w-input" id="gv-name" maxlength="256" name="name" placeholder="Ваше имя *" type="text">
-        <div class="gv-error" id="gv-err-name">Пожалуйста, введите ваше имя</div>
+        <div class="gv-error" id="gv-err-name">Введите имя (1–2 слова, минимум 2 буквы каждое, только кириллица или латиница)</div>
       </div>
       <div>
         <input class="tastes w-input" id="gv-phone" maxlength="256" name="phone" placeholder="Ваш телефон *" type="tel">
-        <div class="gv-error" id="gv-err-phone">Пожалуйста, введите номер телефона</div>
+        <div class="gv-error" id="gv-err-phone">Неверный формат. Допустимо: 07xxxxxxx, 06xxxxxxx, 7xxxxxxx, 6xxxxxxx, +3737xxxxxxx, +3736xxxxxxx</div>
       </div>
       <div>
         <select id="gv-studio" name="studio" class="tastes-drop w-select">
@@ -259,8 +259,21 @@ function gvSubmit(e) {
   var policy  = document.getElementById('gv-policy').checked;
 
   var valid = true;
-  if (!name)   { gvShowError('gv-name', 'gv-err-name');     valid = false; }
-  if (!phone)  { gvShowError('gv-phone', 'gv-err-phone');   valid = false; }
+
+  // Name: 1–2 words, each word ≥ 2 Cyrillic or Latin letters
+  var nameRx = /^[A-Za-zА-Яа-яЁё]{2,}(\s+[A-Za-zА-Яа-яЁё]{2,})?$/;
+  if (!name || !nameRx.test(name)) {
+    gvShowError('gv-name', 'gv-err-name');
+    valid = false;
+  }
+
+  // Phone: Moldova formats — 07/06xxxxxxx, 7/6xxxxxxx, +3737/6xxxxxxx, 3737/6xxxxxxx
+  var phoneRx = /^(\+373[67]\d{7}|373[67]\d{7}|0[67]\d{7}|[67]\d{7})$/;
+  if (!phone || !phoneRx.test(phone.replace(/\s/g, ''))) {
+    gvShowError('gv-phone', 'gv-err-phone');
+    valid = false;
+  }
+
   if (!studio) { gvShowError('gv-studio', 'gv-err-studio'); valid = false; }
   if (!policy) { document.getElementById('gv-err-policy').style.display = 'block'; valid = false; }
   if (!valid) return;
