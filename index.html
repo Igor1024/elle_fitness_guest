@@ -146,6 +146,14 @@ var modifier_text_summary = true;
   line-height: 1.5;
 }
 .gv-check-label a { color: #e81b3a; }
+.gv-error {
+  display: none;
+  font-family: Montserrat, sans-serif;
+  font-size: 11px;
+  color: #e81b3a;
+  margin-top: 3px;
+  padding-left: 2px;
+}
 @media (max-width: 520px) {
   #gv-modal { padding: 36px 22px 28px; }
   #gv-title { font-size: 18px; }
@@ -157,25 +165,36 @@ var modifier_text_summary = true;
     <button id="gv-close" onclick="closeGuestModal()" aria-label="Закрыть">&times;</button>
     <h2 id="gv-title">Пробная <span>тренировка</span></h2>
     <p id="gv-subtitle">Гостевой визит в Elle Fitness</p>
-    <form id="gv-form" method="get" onsubmit="gvSubmit(event)">
-      <input class="tastes w-input" maxlength="256" name="Имя" placeholder="Ваше имя" type="text" required>
-      <input class="tastes w-input" maxlength="256" name="Телефон" placeholder="Ваш телефон" type="tel" required>
-      <select name="Студия" required class="tastes-drop w-select">
-        <option value="" selected>Выберите студию...</option>
-        <option value="Elle Fitness Botanica">Elle Fitness Botanica - 100 MDL</option>
-        <option value="Elle Fitness Râșcani">Elle Fitness Râșcani - бесплатно</option>
-        <option value="Elle Fitness Telecentru">Elle Fitness Telecentru</option>
-        <option value="Elle Fitness Buicani">Elle Fitness Buicani</option>
-      </select>
-      <textarea name="Сообщение" placeholder="Ваше сообщение" maxlength="5000" class="tastes text-area w-input" style="min-height:90px;"></textarea>
+    <form id="gv-form" onsubmit="gvSubmit(event)" novalidate>
+      <div>
+        <input class="tastes w-input" id="gv-name" maxlength="256" name="name" placeholder="Ваше имя *" type="text">
+        <div class="gv-error" id="gv-err-name">Пожалуйста, введите ваше имя</div>
+      </div>
+      <div>
+        <input class="tastes w-input" id="gv-phone" maxlength="256" name="phone" placeholder="Ваш телефон *" type="tel">
+        <div class="gv-error" id="gv-err-phone">Пожалуйста, введите номер телефона</div>
+      </div>
+      <div>
+        <select id="gv-studio" name="studio" class="tastes-drop w-select">
+          <option value="" selected>Выберите студию... *</option>
+          <option value="Elle Fitness Botanica">Elle Fitness Botanica - 100 MDL</option>
+          <option value="Elle Fitness Râșcani">Elle Fitness Râșcani - бесплатно</option>
+          <option value="Elle Fitness Telecentru">Elle Fitness Telecentru</option>
+          <option value="Elle Fitness Buicani">Elle Fitness Buicani</option>
+        </select>
+        <div class="gv-error" id="gv-err-studio">Пожалуйста, выберите студию</div>
+      </div>
+      <textarea id="gv-message" name="message" placeholder="Ваше сообщение" maxlength="5000" class="tastes text-area w-input" style="min-height:90px;"></textarea>
       <div class="gv-check-wrap">
-        <input type="checkbox" id="gv-policy" required>
+        <input type="checkbox" id="gv-policy">
         <label class="gv-check-label" for="gv-policy">Я ознакомлен с <a href="#">Политикой обработки персональных данных</a></label>
       </div>
-      <input type="submit" class="button w-button" value="Отправить" style="margin-top:8px;">
+      <div class="gv-error" id="gv-err-policy" style="margin-top:-4px;">Необходимо принять политику обработки данных</div>
+      <div id="gv-send-error" class="gv-error" style="margin-top:4px;display:none;">Ошибка отправки. Попробуйте ещё раз.</div>
+      <button type="submit" id="gv-submit-btn" class="button w-button" style="margin-top:8px;cursor:pointer;border:none;width:100%;">Отправить</button>
     </form>
     <div id="gv-success">
-      <div style="font-size:36px;margin-bottom:12px;">✓</div>
+      <div style="font-size:42px;margin-bottom:12px;color:#e81b3a;">✓</div>
       Спасибо! Мы свяжемся с вами<br>в ближайшее время.
       <br><br>
       <button class="button w-button" onclick="closeGuestModal()" style="cursor:pointer;border:none;">Закрыть</button>
@@ -184,16 +203,18 @@ var modifier_text_summary = true;
 </div>
 
 <script>
+// ← Замените на ваш webhook URL из make.com
+var GV_WEBHOOK_URL = 'https://hook.eu1.make.com/ВСТАВЬТЕ_ВАШ_URL_ЗДЕСЬ';
+
 function openGuestModal() {
   var overlay = document.getElementById('gv-overlay');
   overlay.style.display = 'block';
   requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      overlay.classList.add('gv-open');
-    });
+    requestAnimationFrame(function() { overlay.classList.add('gv-open'); });
   });
   document.body.style.overflow = 'hidden';
 }
+
 function closeGuestModal() {
   var overlay = document.getElementById('gv-overlay');
   overlay.classList.remove('gv-open');
@@ -203,13 +224,77 @@ function closeGuestModal() {
     document.getElementById('gv-form').reset();
     document.getElementById('gv-form').style.display = 'flex';
     document.getElementById('gv-success').style.display = 'none';
+    document.getElementById('gv-send-error').style.display = 'none';
+    document.getElementById('gv-submit-btn').disabled = false;
+    document.getElementById('gv-submit-btn').value = 'Отправить';
+    gvClearErrors();
   }, 320);
 }
+
+function gvClearErrors() {
+  document.querySelectorAll('.gv-error').forEach(function(el) {
+    el.style.display = 'none';
+  });
+  ['gv-name','gv-phone','gv-studio'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.borderColor = '';
+  });
+}
+
+function gvShowError(fieldId, errId) {
+  var field = document.getElementById(fieldId);
+  var err = document.getElementById(errId);
+  if (field) field.style.borderColor = '#e81b3a';
+  if (err) err.style.display = 'block';
+}
+
 function gvSubmit(e) {
   e.preventDefault();
-  document.getElementById('gv-form').style.display = 'none';
-  document.getElementById('gv-success').style.display = 'block';
+  gvClearErrors();
+
+  var name    = document.getElementById('gv-name').value.trim();
+  var phone   = document.getElementById('gv-phone').value.trim();
+  var studio  = document.getElementById('gv-studio').value;
+  var message = document.getElementById('gv-message').value.trim();
+  var policy  = document.getElementById('gv-policy').checked;
+
+  var valid = true;
+  if (!name)   { gvShowError('gv-name', 'gv-err-name');     valid = false; }
+  if (!phone)  { gvShowError('gv-phone', 'gv-err-phone');   valid = false; }
+  if (!studio) { gvShowError('gv-studio', 'gv-err-studio'); valid = false; }
+  if (!policy) { document.getElementById('gv-err-policy').style.display = 'block'; valid = false; }
+  if (!valid) return;
+
+  var btn = document.getElementById('gv-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Отправка...';
+
+  var payload = {
+    name:    name,
+    phone:   phone,
+    studio:  studio,
+    message: message,
+    source:  'guest-visit-modal',
+    date:    new Date().toISOString()
+  };
+
+  fetch(GV_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    document.getElementById('gv-form').style.display = 'none';
+    document.getElementById('gv-success').style.display = 'block';
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.textContent = 'Отправить';
+    document.getElementById('gv-send-error').style.display = 'block';
+  });
 }
+
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeGuestModal();
 });
