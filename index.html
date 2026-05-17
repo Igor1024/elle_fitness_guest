@@ -292,10 +292,18 @@ function gvSubmit(e) {
   else if (/^[67]/.test(p))  p = '0' + p;
   var phoneNorm = p.slice(0, 3) + '-' + p.slice(3);
 
+  var studioMap = {
+    'Elle Fitness Botanica':   'Botanica',
+    'Elle Fitness Râșcani':    'Riscani',
+    'Elle Fitness Telecentru': 'Telecentru',
+    'Elle Fitness Buicani':    'Buiucani'
+  };
+  var studioNorm = studioMap[studio] || studio;
+
   var payload = {
     name:    name,
     phone:   phoneNorm,
-    studio:  studio,
+    studio:  studioNorm,
     message: message,
     source:  'guest-visit-modal',
     date:    new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Chisinau', hour12: false })
