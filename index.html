@@ -159,12 +159,7 @@ var modifier_text_summary = true;
   #gv-title { font-size: 18px; }
 }
 .section.mobile-nav {
-  max-height: 0 !important;
-  overflow: hidden !important;
-  transition: max-height 0.35s ease;
-}
-.section.mobile-nav.mob-open {
-  max-height: 100vh !important;
+  transition: height 0.35s ease;
 }
 </style>
 
@@ -214,9 +209,25 @@ var modifier_text_summary = true;
 </div>
 
 <script>
+var _mobileNavOpen = false;
 function toggleMobileNav() {
-  document.querySelector('.section.mobile-nav').classList.toggle('mob-open');
+  var nav = document.querySelector('.section.mobile-nav');
+  _mobileNavOpen = !_mobileNavOpen;
+  if (_mobileNavOpen) {
+    nav.style.setProperty('height', 'auto', 'important');
+    nav.style.setProperty('overflow', 'visible', 'important');
+  } else {
+    nav.style.setProperty('height', '0px', 'important');
+    nav.style.setProperty('overflow', 'hidden', 'important');
+  }
 }
+document.addEventListener('DOMContentLoaded', function() {
+  var nav = document.querySelector('.section.mobile-nav');
+  if (nav) {
+    nav.style.setProperty('height', '0px', 'important');
+    nav.style.setProperty('overflow', 'hidden', 'important');
+  }
+});
 
 // ← Замените на ваш webhook URL из make.com
 var GV_WEBHOOK_URL = 'https://hook.eu1.make.com/ВСТАВЬТЕ_ВАШ_URL_ЗДЕСЬ';
